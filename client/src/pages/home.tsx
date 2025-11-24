@@ -1,0 +1,385 @@
+import { useState, useEffect, useRef } from "react";
+import { Mail, Instagram, ChevronDown } from "lucide-react";
+import backgroundImage from "@assets/01 Greek_1763915893499.png";
+
+export default function Home() {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [showContact, setShowContact] = useState(false);
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const [scrollOpacity, setScrollOpacity] = useState(1);
+  const [showArtists, setShowArtists] = useState(false);
+  const [showGlitch, setShowGlitch] = useState(false);
+  
+  const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const fadeStart = windowHeight * 0.3;
+      const fadeEnd = windowHeight * 0.8;
+      
+      if (scrollY < fadeStart) {
+        setScrollOpacity(1);
+      } else if (scrollY > fadeEnd) {
+        setScrollOpacity(0);
+      } else {
+        const opacity = 1 - (scrollY - fadeStart) / (fadeEnd - fadeStart);
+        setScrollOpacity(opacity);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleSections((prev) => new Set(prev).add(entry.target.id));
+            
+            // When title section becomes visible, show artists after a delay
+            if (entry.target.id === "title") {
+              setTimeout(() => {
+                setShowArtists(true);
+              }, 400);
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.3,
+        rootMargin: "-10% 0px -10% 0px",
+      }
+    );
+
+    Object.values(sectionRefs.current).forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Occasional glitch effect on background
+  useEffect(() => {
+    const triggerGlitch = () => {
+      setShowGlitch(true);
+      // Glitch lasts 1.5 seconds - slow distortion
+      setTimeout(() => setShowGlitch(false), 1500);
+    };
+
+    // First glitch happens right after "COMING SOON..." loads (around 1.5s)
+    const initialGlitch = setTimeout(triggerGlitch, 1500);
+
+    // Random glitch every 8-15 seconds after the initial one
+    const scheduleNextGlitch = () => {
+      const delay = 8000 + Math.random() * 7000;
+      return setTimeout(triggerGlitch, delay);
+    };
+
+    // Start scheduling regular glitches after the initial one
+    let timeout = setTimeout(() => {
+      timeout = scheduleNextGlitch();
+    }, 3500);
+
+    const interval = setInterval(() => {
+      clearTimeout(timeout);
+      timeout = scheduleNextGlitch();
+    }, 15000);
+
+    return () => {
+      clearTimeout(initialGlitch);
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, []);
+
+
+  const artists = [
+    "Asmaa Azaizeh",
+    "Julio Clavijo",
+    "Sharlene Durfey",
+    "Kevin Junk",
+    "Andrea Mikyska",
+    "Tomer Rosenthal",
+    "Nicola Sebastian",
+    "Theresa Weber",
+  ];
+
+  const isVisible = (id: string) => visibleSections.has(id);
+
+  return (
+    <div className="relative w-full bg-background">
+      {/* Background Image with Fixed Position */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        {/* Main background image */}
+        <img
+          src={backgroundImage}
+          alt="Background"
+          className="h-full w-full object-cover"
+        />
+        
+        {/* Glitch: VHS static/snow effect */}
+        {showGlitch && (
+          <>
+            {/* Top slice - shifted right, desaturated */}
+            <img
+              src={backgroundImage}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover glitch-animate"
+              style={{
+                clipPath: 'polygon(0 0, 100% 0, 100% 25%, 0 25%)',
+                transform: 'translateX(30px) translateY(-5px) rotate(0.5deg)',
+                filter: 'brightness(1.2) contrast(1.5) saturate(0.3) grayscale(0.4)',
+              }}
+            />
+            {/* Upper-middle slice - shifted left, more desaturated */}
+            <img
+              src={backgroundImage}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover glitch-animate"
+              style={{
+                clipPath: 'polygon(0 25%, 100% 25%, 100% 50%, 0 50%)',
+                transform: 'translateX(-35px) translateY(6px) skewX(-2deg)',
+                filter: 'brightness(0.9) contrast(1.6) saturate(0.2) grayscale(0.5)',
+                animationDelay: '0.05s',
+              }}
+            />
+            {/* Lower-middle slice - shifted right and heavily skewed */}
+            <img
+              src={backgroundImage}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover glitch-animate"
+              style={{
+                clipPath: 'polygon(0 50%, 100% 50%, 100% 75%, 0 75%)',
+                transform: 'translateX(40px) translateY(-4px) skewX(-4deg) rotate(-0.8deg)',
+                filter: 'brightness(1.1) contrast(1.7) saturate(0.1) grayscale(0.6)',
+                animationDelay: '0.03s',
+              }}
+            />
+            {/* Bottom slice - shifted left, most desaturated */}
+            <img
+              src={backgroundImage}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover glitch-animate"
+              style={{
+                clipPath: 'polygon(0 75%, 100% 75%, 100% 100%, 0 100%)',
+                transform: 'translateX(-28px) translateY(8px) rotate(0.6deg)',
+                filter: 'brightness(1.15) contrast(1.5) saturate(0.2) grayscale(0.5)',
+                animationDelay: '0.07s',
+              }}
+            />
+            
+            {/* VHS static overlay - scanlines */}
+            <div 
+              className="absolute inset-0 pointer-events-none opacity-30"
+              style={{
+                background: `repeating-linear-gradient(
+                  0deg,
+                  transparent 0px,
+                  rgba(255, 255, 255, 0.03) 1px,
+                  transparent 2px,
+                  transparent 3px
+                )`,
+              }}
+            />
+            
+            {/* Noise/grain overlay */}
+            <div 
+              className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+              }}
+            />
+          </>
+        )}
+        
+        {/* Dark Gradient Overlay for Text Legibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70" />
+        {/* Vignette Effect */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "radial-gradient(circle at center, transparent 0%, transparent 40%, rgba(0, 0, 0, 0.5) 100%)",
+          }}
+        />
+      </div>
+
+      {/* Snap Container - Only for the first two sections */}
+      <div className="relative z-10 h-screen overflow-y-auto snap-y snap-mandatory">
+        {/* Section 1: Coming Soon */}
+        <section
+          id="coming-soon"
+          ref={(el) => (sectionRefs.current["coming-soon"] = el)}
+          className="relative flex min-h-screen items-center justify-center px-6 py-16 snap-start snap-always"
+          style={{
+            opacity: scrollOpacity,
+            transition: "opacity 0.3s ease-out",
+          }}
+        >
+          <h1
+            className={`
+              text-center font-serif text-4xl font-light tracking-widest text-white transition-all duration-1000
+              sm:text-5xl md:text-7xl lg:text-8xl
+              ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}
+            `}
+            style={{ textShadow: "0 4px 20px rgba(0, 0, 0, 0.6)" }}
+            data-testid="text-headline"
+          >
+            COMING SOON...
+          </h1>
+
+          {/* Scroll Indicator */}
+          <div
+            className={`
+              absolute bottom-24 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 transition-all duration-1000
+              md:bottom-8
+              ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}
+            `}
+            style={{ transitionDelay: "1200ms" }}
+            data-testid="scroll-indicator"
+          >
+            <p className="text-xs uppercase tracking-widest text-white/70 md:text-sm">
+              Scroll
+            </p>
+            <div className="animate-bounce">
+              <ChevronDown className="h-6 w-6 text-white/70 md:h-8 md:w-8" />
+            </div>
+          </div>
+        </section>
+
+        {/* Section 2: Publication Title & Artists Combined */}
+        <section
+          id="title"
+          ref={(el) => (sectionRefs.current["title"] = el)}
+          className="flex min-h-screen flex-col items-center justify-center px-6 py-6 md:py-12 snap-start snap-always"
+        >
+          {/* Title */}
+          <div className="flex flex-col items-center gap-3 mb-10 md:gap-4 md:mb-12">
+            <h2
+              className={`
+                text-center font-serif text-4xl font-light tracking-wider text-white transition-all duration-1000
+                sm:text-5xl md:text-7xl lg:text-8xl
+                ${isVisible("title") ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}
+              `}
+              style={{ textShadow: "0 4px 20px rgba(0, 0, 0, 0.6)" }}
+              data-testid="text-title"
+            >
+              VARIOUS DEGREES
+            </h2>
+            <p
+              className={`
+                text-center font-serif text-lg font-light italic tracking-widest text-white/90 transition-all duration-1000
+                sm:text-xl md:text-2xl lg:text-3xl
+                ${isVisible("title") ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}
+              `}
+              style={{ 
+                textShadow: "0 2px 12px rgba(0, 0, 0, 0.5)",
+                transitionDelay: "200ms",
+                letterSpacing: "0.2em"
+              }}
+              data-testid="text-subtitle"
+            >
+              Remnants of a future
+            </p>
+          </div>
+
+          {/* Artists - appear automatically after delay */}
+          <div className="flex max-w-4xl flex-col items-center gap-3 md:gap-4">
+            {artists.map((artist, index) => (
+              <div
+                key={artist}
+                className={`
+                  transition-all duration-1000
+                  ${showArtists ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"}
+                `}
+                style={{
+                  transitionDelay: showArtists ? `${index * 60}ms` : "0ms",
+                }}
+              >
+                <p
+                  className="text-center font-serif text-xl font-light italic text-white/95 sm:text-2xl md:text-3xl lg:text-4xl"
+                  style={{ textShadow: "0 2px 12px rgba(0, 0, 0, 0.5)" }}
+                  data-testid={`text-artist-${index}`}
+                >
+                  {artist}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="relative z-10 flex flex-col items-center gap-2 px-6 py-12 text-center">
+          <p className="text-xs text-white/50 md:text-sm" data-testid="text-copyright">
+            © 2025 Various Degrees. All rights reserved.
+          </p>
+          <p className="text-xs text-white/40 md:text-sm" data-testid="text-credit">
+            Designed by YRT
+          </p>
+        </footer>
+      </div>
+
+      {/* Floating Contact Bubble */}
+      <div
+        className={`
+          fixed bottom-6 right-6 z-20 transition-all duration-1000 md:bottom-8 md:right-8
+          ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}
+        `}
+        style={{ transitionDelay: "1600ms" }}
+      >
+        {/* Expanded Contact Info */}
+        {showContact && (
+          <div
+            className="mb-3 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg"
+            data-testid="contact-info"
+          >
+            <div className="flex flex-col gap-3">
+              {/* Instagram */}
+              <a
+                href="https://www.instagram.com/various.degrees/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group/link flex items-center gap-3 text-white transition-all hover:text-white/80"
+                data-testid="link-instagram"
+              >
+                <Instagram className="h-5 w-5 flex-shrink-0 transition-transform group-hover/link:scale-110" />
+                <span className="text-sm font-medium">@various.degrees</span>
+              </a>
+
+              {/* Email */}
+              <a
+                href="mailto:hanna@amenogroup.co"
+                className="group/link flex items-center gap-3 text-white transition-all hover:text-white/80"
+                data-testid="link-email"
+              >
+                <Mail className="h-5 w-5 flex-shrink-0 transition-transform group-hover/link:scale-110" />
+                <span className="text-sm font-medium">hanna@amenogroup.co</span>
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Toggle Button */}
+        <button
+          onClick={() => setShowContact(!showContact)}
+          className="group ml-auto flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-5 py-3 backdrop-blur-lg transition-all duration-300 hover:scale-105 hover:border-white/30 hover:bg-white/20 active:scale-95"
+          data-testid="button-contact"
+          aria-label={showContact ? "Hide contact information" : "Show contact information"}
+        >
+          <Mail className="h-5 w-5 text-white transition-transform duration-300 group-hover:rotate-12" />
+          <span className="text-sm font-medium text-white">
+            {showContact ? "Close" : "Contact"}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
