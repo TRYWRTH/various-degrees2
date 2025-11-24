@@ -81,7 +81,7 @@ async function runApp(setup) {
 
 // server/index-prod.ts
 async function serveStatic(app2, _server) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  const distPath = path.resolve(import.meta.dirname, "../dist");
   if (!fs.existsSync(distPath)) {
     console.warn(
       `Build directory not found: ${distPath}. Run 'npm run build' to create it.`
@@ -96,8 +96,12 @@ async function serveStatic(app2, _server) {
     etag: true,
     lastModified: true
   }));
+  app2.use("/assets", express2.static(path.join(distPath, "assets"), {
+    maxAge: "1d",
+    immutable: true
+  }));
   app2.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+    res.sendFile(path.join(distPath, "index.html"));
   });
 }
 (async () => {

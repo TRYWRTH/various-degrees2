@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
 import { type Server } from "node:http";
@@ -37,7 +38,7 @@ export async function setupVite(app: Express, server: Server) {
 
     try {
       const clientTemplate = path.resolve(
-        import.meta.dirname,
+        path.dirname(fileURLToPath(import.meta.url)),
         "..",
         "client",
         "index.html",
